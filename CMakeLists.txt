@@ -76,10 +76,10 @@ target_link_libraries(tests
 
 add_library(RapidSIFT ${SOURCE_FILES})
 target_link_libraries(RapidSIFT PRIVATE
-        nvinfer
         cuda-utils)
 if(RAPIDSIFT_ENABLE_SOSNET)
-        target_link_libraries(RapidSIFT PRIVATE SOSNet_runtime sosnet_rc)
+        target_link_libraries(RapidSIFT PRIVATE SOSNet_runtime sosnet_rc
+        nvinfer)
 endif()
 
 find_package(OpenCV)
