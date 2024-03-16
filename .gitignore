@@ -1,0 +1,8 @@
+cmake-build-*
+.idea
+tmp
+*.swp
+*.kate-swp
+images/
+build/
+.vscode/
