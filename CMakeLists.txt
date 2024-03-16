@@ -6,14 +6,24 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_ARCHITECTURES 75-real 86-real)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${CMAKE_SOURCE_DIR}/../cuda-utils ${CMAKE_SOURCE_DIR}/../sosnet-ptq)
+
+include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${CMAKE_SOURCE_DIR}/../cuda-utils)
 link_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../lib64
-        ${CMAKE_SOURCE_DIR}/../sosnet-ptq/build/vscode/
         /opt/TensorRT/lib
         ${CMAKE_SOURCE_DIR}/../cuda-utils/build/qtcreator-release/)
 
+option(RAPIDSIFT_ENABLE_SOSNET "The licence of upstream SOSNet weights (https://github.com/scape-research/SOSNet) is unspecified. Use it at your own risk. You have been warned!" OFF)
+if(RAPIDSIFT_ENABLE_SOSNET)
+        include_directories(${CMAKE_SOURCE_DIR}/../sosnet-ptq)
+        link_directories(${CMAKE_SOURCE_DIR}/../sosnet-ptq/build/vscode/)
+        add_definitions(-DRAPIDSIFT_ENABLE_SOSNET=1)
+else()
+        add_definitions(-DRAPIDSIFT_ENABLE_SOSNET=0)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wreturn-type -Wall -Wno-unknown-pragmas -Wextra -Werror")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+
 
 find_package(Eigen3 REQUIRED)
 
@@ -26,7 +36,6 @@ set(SOURCE_FILES
         conv1d.h types.h
         utils_sift.h
         kernel_DoG.cu
-        kernel_DoG_HMMA.cu
         kernels.h
         kernels.cpp
         TexObj.h
@@ -67,9 +76,11 @@ target_link_libraries(tests
 
 add_library(RapidSIFT ${SOURCE_FILES})
 target_link_libraries(RapidSIFT PRIVATE
-        SOSNet_runtime sosnet_rc
         nvinfer
         cuda-utils)
+if(RAPIDSIFT_ENABLE_SOSNET)
+        target_link_libraries(RapidSIFT PRIVATE SOSNet_runtime sosnet_rc)
+endif()
 
 find_package(OpenCV)
 add_executable(conv1dtest main.cpp RapidSift.h filter/robust_gms_matcher.cpp filter/robust_gms_matcher.h

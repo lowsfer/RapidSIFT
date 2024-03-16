@@ -10,8 +10,9 @@
 #include "kernels.h"
 #include "ThreadPool.h"
 #include "AdaptiveNMS.h"
+#if RAPIDSIFT_ENABLE_SOSNET
 #include <SOSNet.h>
-
+#endif
 class SIFT_worker {
 public:
     SIFT_worker(DescType descType);
@@ -86,9 +87,10 @@ private:
     std::unique_ptr<GPUArray<KeyPoint>, cuda_device_deleter> _kpoints;
     uint32_t _max_num_kpoints = 0;
     std::unique_ptr<SiftDescriptor[], cuda_device_deleter> _descriptors;
+#if RAPIDSIFT_ENABLE_SOSNET
     std::unique_ptr<Patch32x32[], cuda_device_deleter> _patches;// for SOSNet
     std::unique_ptr<ISOSNetInfer> _sosnet;
-
+#endif
     uint32_t _num_kpoints = 0;//set by get_kpoints() and used by get_descriptors(). Should only be used in cuda callbacks in stream
 
     float _predicated_thres_contrast {0.04f};

@@ -39,7 +39,11 @@ SIFT_worker::SIFT_worker(DescType descType) : mDescType{descType}, _thread_pool(
             }
     );
     if (descType == DescType::kSOSNet) {
+#if RAPIDSIFT_ENABLE_SOSNET
         _sosnet = createSOSNet();
+#else
+        throw std::runtime_error("SOSNet is not enabled at compile-time. To enable it, set -DRAPIDSIFT_ENABLE_SOSNET=1. Note that the original SOSNet project does not specify a license. You have been warned!");
+#endif
     }
 }
 
@@ -206,6 +210,7 @@ void SIFT_worker::describe(bool up_sample) {
             _kpoints.get(), _num_kpoints, 64.f, _descriptors.get(), mDescType == DescType::kRootSIFT, _stream.get()));
         return;
     }
+#if RAPIDSIFT_ENABLE_SOSNET
     assert(mDescType == DescType::kSOSNet);
     float const patchQuantScale = _sosnet->getInputScale();
     checkCudaError(cuda_makePatch(_dev_input.get_tex(), int2{_dev_input.width(), _dev_input.height()},
@@ -214,6 +219,9 @@ void SIFT_worker::describe(bool up_sample) {
         int32_t const batch = std::min(_sosnet->maxBatchSize, (int32_t)_num_kpoints - i);
         _sosnet->infer((uint8_t(*)[128])&_descriptors[i], (int8_t(*)[32][32])&_patches[i], batch, _stream.get());
     }
+#else
+    throw std::runtime_error("SOSNet is disabled at compile-time");
+#endif
 }
 
 std::vector<KeyPoint> SIFT_worker::get_keypoints() {
@@ -252,7 +260,11 @@ void SIFT_worker::reserve_kpoints(uint32_t max_num_kpoints) {
     _kpoints.reset(reinterpret_cast<GPUArray<KeyPoint>*>(cuda_device_allocator<uint8_t>{}.allocate(sizeof(GPUArray<KeyPoint>) + sizeof(KeyPoint) * _max_num_kpoints)));
     _descriptors.reset(cuda_device_allocator<SiftDescriptor>{}.allocate(_max_num_kpoints));
     if (mDescType == DescType::kSOSNet) {
+#if RAPIDSIFT_ENABLE_SOSNET
         _patches.reset(cuda_device_allocator<Patch32x32>{}.allocate(_max_num_kpoints));
+#else
+        throw std::runtime_error("SOSNet is disabled at compile-time");
+#endif
     }
 }
 
