@@ -60,14 +60,14 @@ set(SOURCE_FILES
 
 #cuda_add_executable(texture_test texture_test.cu)
 
-add_executable(tests
+add_executable(tests_rapidsift
         tests/test_main.cpp
         tests/DoG_test.cpp
         tests/solve_GaussElim_test.cpp
         tests/find_keypoints_test.cpp
         tests/AdaptiveNMSTest.cpp)
-target_compile_definitions(tests PRIVATE BOOST_TEST_DYN_LINK)
-target_link_libraries(tests
+target_compile_definitions(tests_rapidsift PRIVATE BOOST_TEST_DYN_LINK)
+target_link_libraries(tests_rapidsift
 #        ${CUDA_LIBRARIES}
         boost_unit_test_framework
         RapidSIFT
