@@ -162,7 +162,7 @@ __global__ void kernel_describe(
                     float v_rco001 = v_rc00*obin_res, v_rco000 = v_rc00 - v_rco001;
 
 #if 1
-                    auto updateHist = [&](int r, int c, int o, float v)->uint32_t *{
+                    auto updateHist = [&](int r, int c, int o, float v){
                         if (in_range(r, 0, d) && in_range(c, 0, d)){
                             atomicAdd(&hist_grp[r][c][(o+n*2)%n], float2fixed(v));
                         }

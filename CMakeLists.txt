@@ -27,7 +27,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wreturn-type -Wall -Wno-u
 
 find_package(Eigen3 REQUIRED)
 
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo -keep -res-usage -Xptxas -v -Xptxas -warn-spills --expt-relaxed-constexpr -Wno-deprecated-gpu-targets --use_fast_math")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo -keep --expt-relaxed-constexpr") #-res-usage
+set(CUDA_PTXAS_FLAGS_RELEASE "${CUDA_PTXAS_FLAGS_RELEASE} -warn-lmem-usage -warn-spills -Werror") # -v
+set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} --use_fast_math -DNDEBUG -Xptxas='${CUDA_PTXAS_FLAGS_RELEASE}'")
 
 #find_library( NVTX_LIBRARY nvToolsExt PATHS ENV LD_LIBRARY_PATH /opt/cuda/lib64)
 
