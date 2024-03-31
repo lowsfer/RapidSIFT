@@ -10,7 +10,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${CMAKE_SOURCE_DIR}/../cuda-utils)
 link_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../lib64
         /opt/TensorRT/lib
-        ${CMAKE_SOURCE_DIR}/../cuda-utils/build/qtcreator-release/)
+        ${CMAKE_CURRENT_BINARY_DIR}/../cuda-utils)
+
 
 option(RAPIDSIFT_ENABLE_SOSNET "The licence of upstream SOSNet weights (https://github.com/scape-research/SOSNet) is unspecified. Use it at your own risk. You have been warned!" OFF)
 if(RAPIDSIFT_ENABLE_SOSNET)
@@ -73,7 +74,9 @@ target_link_libraries(tests_rapidsift
 #        ${CUDA_LIBRARIES}
         boost_unit_test_framework
         RapidSIFT
+        cuda-utils
         opencv_core opencv_imgproc opencv_highgui opencv_imgcodecs opencv_highgui
+        turbojpeg jpeg heif exiv2
         )
 
 add_library(RapidSIFT ${SOURCE_FILES})
@@ -85,9 +88,9 @@ if(RAPIDSIFT_ENABLE_SOSNET)
 endif()
 
 find_package(OpenCV)
-add_executable(conv1dtest main.cpp RapidSift.h filter/robust_gms_matcher.cpp filter/robust_gms_matcher.h
+add_executable(demo_sift main.cpp RapidSift.h filter/robust_gms_matcher.cpp filter/robust_gms_matcher.h
         filter/geometry.cpp filter/PropagationMatchFilter.cpp)
-target_link_libraries(conv1dtest
+target_link_libraries(demo_sift
         RapidSIFT
         opencv_core opencv_imgproc opencv_highgui opencv_imgcodecs opencv_features2d
         opencv_calib3d

@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(conv1d_test)
     }
 
     std::unique_ptr<float[]> output_data{new float[output_size]};
-    float (&output)[output_size] = *reinterpret_cast<float (*)[output_size]>(output_data.get());
+    float (&output)[output_size] = reinterpret_cast<float (&)[output_size]>(*output_data.get());
 
     conv.init(*reinterpret_cast<const float (*)[conv.filter_size]>(&input[0]));
     int n;
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(conv1d_test)
         conv(*reinterpret_cast<const float (*)[conv.filter_size]>(&input[conv.filter_size * n]),
              *reinterpret_cast<float (*)[conv.filter_size]>(&output[conv.filter_size * (n - 1)]));
     conv(*reinterpret_cast<const float (*)[conv.filter_size]>(&input[conv.filter_size * n]),
-         *reinterpret_cast<float (*)[conv.filter_size]>(&output[conv.filter_size * (n - 1)]),
+         reinterpret_cast<float (&)[conv.filter_size]>(output[conv.filter_size * (n - 1)]),
          input_size % conv.filter_size);
 
 
