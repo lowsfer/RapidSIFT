@@ -58,7 +58,9 @@ BOOST_AUTO_TEST_CASE(conv1d_test)
         }
     }
 
-    std::unique_ptr<float[]> output_data{new float[round_up(output_size, filter_size)]}; // output_size is enough, roundUp just to make gcc happy (-Werror=array-bounds=)
+    // output_size is enough, roundUp just to make gcc happy (-Werror=array-bounds=)
+    std::unique_ptr<float[]> output_data{new float[round_up(output_size, filter_size)]};
+    std::fill_n(&output_data[0], round_up(output_size, filter_size), NAN);
     float (&output)[output_size] = reinterpret_cast<float (&)[output_size]>(*output_data.get());
 
     conv.init(*reinterpret_cast<const float (*)[filter_size]>(&input[0]));
@@ -73,8 +75,12 @@ BOOST_AUTO_TEST_CASE(conv1d_test)
 
 
 
-    for (int i = 0; i < input_size + 1 - filter_size; i++)
+    for (int i = 0; i < input_size + 1 - filter_size; i++) {
         BOOST_CHECK_CLOSE(output_ref[i], output[i], 1E-5f);
+    }
+    for (int i = output_size; i < round_up(output_size, filter_size); i++) {
+        BOOST_CHECK(std::isnan(output[i]));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(DoG_test)
