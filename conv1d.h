@@ -92,7 +92,7 @@ struct conv1d{
     template <bool is_full = false>
     __host__ __device__ __forceinline__ void compute(const float (&val)[filter_size], float(&out)[filter_size], int count){
         assert(count <= filter_size && count >= 0);
-        if(is_full)
+        if (is_full)
             assert(count == filter_size);
 #pragma unroll
         for(int n = 0; n < filter_size; n++) {
@@ -108,8 +108,10 @@ struct conv1d{
                 accumulators[i] += val[n] * filter(idx < 0 ? idx + filter_size : idx);
             }
         }
-        if(!is_full && count != filter_size)//This is the last iteration. Take the last result, which has been finished
+        if(!is_full && count != filter_size) {//This is the last iteration. Take the last result, which has been finished
+            assert(count < filter_size);
             out[count] = accumulators[count];
+        }
     }
 
     template <int count>

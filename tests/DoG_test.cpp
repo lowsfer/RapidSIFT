@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(conv1d_test)
     conv1d<radius> conv;
     const float filter[radius * 2 + 1] = {.1f, .2f, .3f, .4f, .35f};
     conv.set_filter(filter);
+    constexpr auto filter_size = conv1d<radius>::filter_size;
 
     std::default_random_engine engine;
     std::uniform_real_distribution<float> dist(-1.f, 1.f);
@@ -45,33 +46,34 @@ BOOST_AUTO_TEST_CASE(conv1d_test)
     for (int i = 0; i < input_size; i++)
         input[i] = dist(engine);
 
-    const int output_size = input_size + 1 - conv.filter_size;
+    const int output_size = input_size + 1 - filter_size;
 
     std::unique_ptr<float[]> output_ref_data{new float[output_size]};
     float (&output_ref)[output_size] = *reinterpret_cast<float (*)[output_size]>(output_ref_data.get());
     for (int i = 0; i < output_size; i++) {
         float &result = output_ref[i];
         result = 0.f;
-        for (int j = 0; j < conv.filter_size; j++) {
+        for (int j = 0; j < filter_size; j++) {
             result += input[i + j] * conv.filter(j);
         }
     }
 
-    std::unique_ptr<float[]> output_data{new float[output_size]};
+    std::unique_ptr<float[]> output_data{new float[round_up(output_size, filter_size)]}; // output_size is enough, roundUp just to make gcc happy (-Werror=array-bounds=)
     float (&output)[output_size] = reinterpret_cast<float (&)[output_size]>(*output_data.get());
 
-    conv.init(*reinterpret_cast<const float (*)[conv.filter_size]>(&input[0]));
+    conv.init(*reinterpret_cast<const float (*)[filter_size]>(&input[0]));
     int n;
-    for (n = 1; n < input_size / conv.filter_size; n++)
-        conv(*reinterpret_cast<const float (*)[conv.filter_size]>(&input[conv.filter_size * n]),
-             *reinterpret_cast<float (*)[conv.filter_size]>(&output[conv.filter_size * (n - 1)]));
-    conv(*reinterpret_cast<const float (*)[conv.filter_size]>(&input[conv.filter_size * n]),
-         reinterpret_cast<float (&)[conv.filter_size]>(output[conv.filter_size * (n - 1)]),
-         input_size % conv.filter_size);
+    for (n = 1; n < input_size / filter_size; n++)
+        conv(*reinterpret_cast<const float (*)[filter_size]>(&input[filter_size * n]),
+             *reinterpret_cast<float (*)[filter_size]>(&output[filter_size * (n - 1)]),
+             filter_size);
+    conv(*reinterpret_cast<const float (*)[filter_size]>(&input[filter_size * n]),
+         reinterpret_cast<float (&)[filter_size]>(output[filter_size * (n - 1)]),
+         input_size % filter_size);
 
 
 
-    for (int i = 0; i < input_size + 1 - conv.filter_size; i++)
+    for (int i = 0; i < input_size + 1 - filter_size; i++)
         BOOST_CHECK_CLOSE(output_ref[i], output[i], 1E-5f);
 }
 

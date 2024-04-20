@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "SIFT_worker.h"
 #include "kernels.h"
+#include <mutex>
 
 const static size_t init_idx_input = 0;
 const static float init_sigma = SIFT_INIT_SIGMA;
@@ -34,6 +35,19 @@ const static float sosnetMagFactor = 4.f;
 // const static float sosnetMagFactor = 9.5f;
 
 SIFT_worker::SIFT_worker(DescType descType) : mDescType{descType}, _thread_pool(1) {
+    if (descType == DescType::kSOSNet) {
+#if RAPIDSIFT_ENABLE_SOSNET
+        _sosnet = createSOSNet();
+#else
+        static bool const warned = []{
+            printf("SOSNet is not enabled at compile-time. To enable it, set -DRAPIDSIFT_ENABLE_SOSNET=1. Note that the original SOSNet project does not specify a license. You have been warned!\nUsing RootSIFT instead.\n");
+            return true;
+        }();
+        static_cast<void>(warned);
+        descType = DescType::kRootSIFT;
+        mDescType = descType;
+#endif
+    }
     auto tex_desc_dev_input = [](){
         cudaTextureDesc tex_desc;
         memset(&tex_desc, 0, sizeof(tex_desc));
@@ -55,13 +69,6 @@ SIFT_worker::SIFT_worker(DescType descType) : mDescType{descType}, _thread_pool(
                 checkCudaError(cudaSetDevice(device));
             }
     );
-    if (descType == DescType::kSOSNet) {
-#if RAPIDSIFT_ENABLE_SOSNET
-        _sosnet = createSOSNet();
-#else
-        throw std::runtime_error("SOSNet is not enabled at compile-time. To enable it, set -DRAPIDSIFT_ENABLE_SOSNET=1. Note that the original SOSNet project does not specify a license. You have been warned!");
-#endif
-    }
 }
 
 SIFT_worker::~SIFT_worker() {
